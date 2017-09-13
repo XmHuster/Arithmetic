@@ -1,0 +1,3 @@
+"C:\OTHER\Tucodec\software\clion\install\CLion 2016.3.5\bin\cmake\bin\cmake.exe" -E remove -f CMakeFiles\Arithmetic.dir/objects.a
+C:\OTHER\Tucodec\software\MinGW\bin\ar.exe cr CMakeFiles\Arithmetic.dir/objects.a @CMakeFiles\Arithmetic.dir\objects1.rsp
+C:\OTHER\Tucodec\software\MinGW\bin\gcc.exe  -g   -Wl,--whole-archive CMakeFiles\Arithmetic.dir/objects.a -Wl,--no-whole-archive  -o Arithmetic.exe -Wl,--out-implib,libArithmetic.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\Arithmetic.dir\linklibs.rsp

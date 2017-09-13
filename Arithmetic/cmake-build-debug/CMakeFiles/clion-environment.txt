@@ -1,0 +1,2 @@
+ToolSet: 3.20@C:\OTHER\Tucodec\software\MinGW
+CMake: 3.6.3@C:\OTHER\Tucodec\software\clion\install\CLion 2016.3.5\bin\cmake\bin\cmake.exe

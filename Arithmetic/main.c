@@ -1,18 +1,32 @@
 #include <stdio.h>
 #include<stdlib.h>
-
+#include <stdint.h>
 #define K 8
+#define BITSIZE 255000
 long high = 0, low = 0, range = 0, ub = 0,code = 0;
 FILE * writeFile = NULL;
 FILE * readFile = NULL;
+FILE * tempFile = NULL;
 int bits[100];
 int cnt = 0;
+int leftBits = 0;
+unsigned int buf = 0;
+int garbage_bits = 0;
 void init(){
     high = (1 << K) - 1;
     low = 0;
     ub = 0;
     range = 0;
     cnt = 0;
+}
+void startPutBits(){
+    leftBits = 32;
+    buf = 0;
+}
+void startGetBits(){
+    garbage_bits = 0;
+    leftBits = 0;
+    buf = 0;
 }
 void flushBit(){
     unsigned int mark = 1 << (K-2);
@@ -24,6 +38,36 @@ void flushBit(){
         putBit(bit);
         ub = ub - 1;
     }
+}
+void putBit(int bit){
+    buf >>= 1;                               /* Put bit in top of buffer.*/
+    if (bit) buf |= 0x80000000;
+    leftBits -= 1;
+    if (leftBits==0) {                        /* Output buffer if it is   */
+        fprintf(tempFile,"%d",buf);                    /* now full.                */
+        leftBits = 32;
+    }
+}
+void endPutBits(){
+    fprintf(tempFile,"%d",buf>>leftBits);
+}
+int getBit(){
+    int t;
+    if (leftBits==0) {                        /* Read the next byte if no */
+        fscanf(tempFile,"%d",&buf);                   /* bits are left in buffer. */
+        if (buf==EOF) {
+            garbage_bits += 1;                      /* Return arbitrary bits*/
+            if (garbage_bits> K -2) {   /* after eof, but check */
+                fprintf(stderr,"Bad input file/n"); /* for too many such.   */
+                exit(-1);
+            }
+        }
+        leftBits = 32;
+    }
+    t = buf & 1;                               /* Return the next bit from */
+    buf >>= 1;                               /* the bottom of the byte. */
+    leftBits -= 1;
+    return t;
 }
 void putN(int x,int N){
     int sc = N+1;
@@ -40,12 +84,7 @@ int getN(int N){
     decodeSymbol(hc,sc,lc);//RemoveSymbol;
     return x;
 }
-void putBit(int bit){
-    bits[cnt++] = bit;
-}
-int getBit(){
-    return bits[cnt++];
-}
+
 void encodeSymbol(int lc,int hc,int sc){
     range = (long)(high - low) + 1;
     high = low + range  * hc / sc - 1;
@@ -201,15 +240,25 @@ void decode(){
 int main() {
     readFile = fopen("readFile.txt","r");
     writeFile = fopen("writeFile.txt","w");
-
-    if(writeFile == NULL || readFile == NULL){
+    tempFile = fopen("tempFile.txt","w");
+    if(writeFile == NULL || readFile == NULL || tempFile == NULL){
         printf("open the writeFile or readFile failure\n");
     }
-
+    int *buffer = (int *)malloc(sizeof(int)*BITSIZE);
+    int buf = 0;
+    startPutBits();
     encode();
     flushBit();
+    endPutBits();
+    fclose(tempFile);
     printf("use %d bits",cnt);
+    tempFile = fopen("tempFile.txt","r");
+    if(tempFile == NULL){
+        printf("open the file failure\n");
+    }
+    startGetBits();
     decode();
+    fclose(tempFile);
 
     return 0;
 }
